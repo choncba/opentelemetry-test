@@ -1,0 +1,47 @@
+# sidecar.yml
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: sidecar
+  namespace: app
+spec:
+  mode: sidecar
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    
+    processors:
+      batch:
+    
+    exporters:
+      logging:
+      otlp:
+        endpoint: "http://otel-collector-collector.opentelemetry.svc.cluster.local:4317"
+        tls:
+          insecure: true
+      # prometheus:
+      #   endpoint: "http://otel-collector-collector.opentelemetry.svc.cluster.local:4318"
+      #   metric_expiration: 180m
+      #   resource_to_telemetry_conversion:
+      #     enabled: true
+    
+    extensions:
+      health_check:
+
+    service:
+      telemetry:
+        logs:
+          level: "debug"
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging, otlp]
+        # metrics:
+        #   receivers: [otlp]
+        #   processors: []
+        #   exporters: [prometheus]

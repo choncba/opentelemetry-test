@@ -1,0 +1,59 @@
+---
+# Definimos el Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskmanager
+  namespace: app
+spec:
+  selector:
+    matchLabels:
+      app: taskmanager
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: taskmanager
+      annotations:
+        # instrumentation.opentelemetry.io/inject-python: "true"
+        instrumentation.opentelemetry.io/inject-python: 'python-instrumentation'
+        sidecar.opentelemetry.io/inject: 'sidecar'
+    spec:
+      containers:
+      - name: taskmanager
+        image: registry.gitlab.com/telecom-argentina/coo/flow/op/taskmanager-flow:opentelemetry-auto_947572262
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        env:
+        - name: "APP_NAME"
+          value: "taskmanager"
+        resources:
+          limits:
+            cpu: 400m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+---
+# Definimos el servicio
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskmanager
+  namespace: app
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: taskmanager
+  type: ClusterIP
+
+

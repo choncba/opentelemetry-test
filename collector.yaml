@@ -1,0 +1,65 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: main
+  namespace: opentelemetry
+  labels:
+    app: opentelemetry
+    component: otel-collector
+spec:
+  mode: deployment
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+    exporters:
+      logging: 
+        loglevel: info
+      otlp:
+        endpoint: "http://tempo.monitoring.svc.cluster.local:4317"
+        tls:
+          insecure: true
+      # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusexporter
+      prometheus:
+        endpoint: "0.0.0.0:8080"
+        # namespace: monitoring
+        # const_labels:
+        #   label1: value1
+        #   'another label': spaced value
+        send_timestamps: true
+        metric_expiration: 180m
+        resource_to_telemetry_conversion:
+          enabled: true
+
+      # En el configmap de prometheus ponemos
+      # - job_name: 'opentelemetry-colector'
+      #   scrape_interval: 10s
+      #   scrape_timeout: 5s
+      #   static_configs:
+      #     - targets:
+      #       - otel-collector-collector.opentelemetry.svc.cluster.local:8080
+      #   metrics_path: /metrics          
+
+    processors:
+      batch:
+
+    extensions:
+      health_check:
+   
+    service:
+      telemetry:
+        logs:
+          level: "debug"
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging, otlp]
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [prometheus]
