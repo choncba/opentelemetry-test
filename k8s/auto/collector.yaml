@@ -18,10 +18,10 @@ spec:
     exporters:
       logging: 
         loglevel: info
-      otlp:
-        endpoint: "http://tempo.monitoring.svc.cluster.local:4317"
-        tls:
-          insecure: true
+      # otlp:
+      #   endpoint: "http://tempo.monitoring.svc.cluster.local:4317"
+      #   tls:
+      #     insecure: true
       # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusexporter
       prometheus:
         endpoint: "0.0.0.0:8080"
@@ -58,8 +58,8 @@ spec:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [logging, otlp]
+          exporters: [logging]
         metrics:
           receivers: [otlp]
           processors: []
-          exporters: [prometheus]
+          exporters: [logging, prometheus]

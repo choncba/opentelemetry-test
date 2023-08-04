@@ -19,14 +19,9 @@ spec:
     exporters:
       logging:
       otlp:
-        endpoint: "http://otel-collector-collector.opentelemetry.svc.cluster.local:4317"
+        endpoint: "http://main-collector.opentelemetry.svc.cluster.local:4317"
         tls:
           insecure: true
-      # prometheus:
-      #   endpoint: "http://otel-collector-collector.opentelemetry.svc.cluster.local:4318"
-      #   metric_expiration: 180m
-      #   resource_to_telemetry_conversion:
-      #     enabled: true
     
     extensions:
       health_check:
@@ -40,8 +35,8 @@ spec:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [logging, otlp]
-        # metrics:
-        #   receivers: [otlp]
-        #   processors: []
-        #   exporters: [prometheus]
+          exporters: [otlp]
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [otlp]

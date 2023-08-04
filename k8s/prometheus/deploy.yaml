@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-k8s-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-k8s
+  template:
+    metadata:
+      labels:
+        app: prometheus-k8s
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.37.1
+        args: ["--config.file=/etc/prometheus/prometheus.yml",
+          "--web.console.libraries=/usr/share/prometheus/console_libraries",
+          "--web.console.templates=/usr/share/prometheus/consoles",
+          "--storage.tsdb.path=/storage",
+          "--storage.tsdb.retention.time=90d",
+          "--storage.tsdb.retention.size=9.5GB",
+          "--storage.tsdb.wal-compression"]
+        ports:
+        - containerPort: 9090
+          name: prometheus
+          protocol: TCP
+        volumeMounts:
+        - name: prometheus-config-volume
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        - name: prometheus-storage-volume
+          mountPath: /storage
+      volumes:
+        - name: prometheus-config-volume
+          configMap:
+            name: prometheus-k8s-config
+            items:
+            - key: prometheus.yml
+              path: prometheus.yml
+        - name: prometheus-storage-volume
+          persistentVolumeClaim:
+            claimName: prometheus-k8s-storage-pvc
